@@ -437,9 +437,9 @@ TEST_CASE("mapcolor")
   CLAUSE cadj16(&adj16, ":-");
   ATOM mapcolorHead("conflict");
   VARIABLE MapX("MapX");
-  VARIABLE MapY("MapY");
+  VARIABLE MapY("MapY"); // MapX???
   TERM adjacent("adjacent", &MapX, &MapY);
-  VARIABLE Color("Color");
+  VARIABLE Color("Color"); // MapX?????
   TERM color1("color", &MapX, &Color);
   TERM color2("color", &MapY, &Color);
   CLAUSE conflict1(&mapcolorHead, ":-", &adjacent, &color1, &color2);  
@@ -689,7 +689,7 @@ TEST_CASE("scheduling")
   VARIABLE DayX("DayX");
   TERM event1("i_will", &market, &DayX); // The same day I go to the market I go shopping
   TERM event2("i_will", &shop, &DayX);
-  VARIABLE DayY("DayY");
+  VARIABLE DayY("DayY", DayX);
   TERM event3("i_will", &take_walk, &DayY); // The same day I go for a walk I go to the barber
   TERM event4("i_will", &barber, &DayY);
   TERM beforeCheck("before", &DayX, &DayY); // I go to the market the day before I take a walk...
@@ -1112,6 +1112,58 @@ TEST_CASE("compatible")
     //    history.force_skip = 1;    
     success = solve(knowledge_base, 0, query, history);
     CHECK(X.get_binding()->get_functor() == "curry");
+}
+
+
+
+TEST_CASE("varconflict")
+{
+  using namespace single_header_prolog;
+  using namespace std;
+
+  struct Attr
+  {
+      const int attrId;
+    
+      bool operator==(const Attr& other) const
+      {
+          return attrId == other.attrId;
+      }
+  };
+
+  constexpr int VALID = 10;
+  constexpr int ROOT  = 20;
+  constexpr int VAR   = -10;
+  
+  Atom<Attr> entId1(Attr{ 666 });
+  Term<Attr> propr1(Attr{ 3 }, &entId1);
+  Clause<Attr> fct1(&propr1, Attr{ -1 });
+  Atom<Attr> entId2(Attr{ 667 });
+  Term<Attr> propr2(Attr{ 3 }, &entId2);
+  Clause<Attr> fct2(&propr2, Attr{ -1 });
+  Atom<Attr> entId3(Attr{ 668 });
+  Term<Attr> propr3(Attr{ 3 }, &entId3);
+  Clause<Attr> fct3(&propr3, Attr{ -1 });
+
+  Atom<Attr> rootA(Attr{ VALID });
+  Atom<Attr> rootH(Attr{ ROOT });
+  Clause<Attr> rtC(&rootH, Attr{ -1 }, &rootA);
+
+  Atom<Attr>  head(Attr{ VALID });
+  Variable<Attr> v(Attr{ VAR });
+  Term<Attr>    t1(Attr{ 3 }, &v);
+  Term<Attr>    t2(Attr{ 4 }, &v);
+  Clause<Attr> vcl(&head, Attr{ -1 }, &t1, &t2);
+  
+  Program<Attr> myProg(&rtC, &fct1, &fct2, &fct3, &vcl);
+
+
+  Atom<Attr> root(Attr{ ROOT });
+  History<Attr> history;
+  ResultType success = ResultType::UNKNOWN;
+  success = solve(myProg, 0, root, history);
+    
+  CHECK((int)success == (int)ResultType::NOT_FOUND);
 }
 
 

@@ -4,7 +4,7 @@
 //   license: you are granted a perpetual, irrevocable license to copy, modify,
 //   publish, and distribute this file as you see fit.
 
-// VERSION 0.0.1
+// VERSION 0.0.2
 
 #ifndef SINGLE_HEADER_PROLOG_H
 #define SINGLE_HEADER_PROLOG_H
@@ -189,23 +189,23 @@ namespace single_header_prolog {
         int varId = 0;
         int origId = 0;
 
-        int chainLen;
+        int chainLen = 1;
     
         Variable<T>* next;
-        Variable<T>* first;    
+        Variable<T>* first;  
 
         bool isHead = false;
         bool locked = false;
     
     public:
         explicit Variable(const T& n)
-            : Term<T>(n), chainLen(1), next(nullptr)
+            : Term<T>(n), next(nullptr)
         {
             first = this;
         }
     
         explicit Variable(const T& n, Variable<T>& fst)
-            : Term<T>(n), chainLen(1), next(nullptr), first(&fst)
+            : Term<T>(n), next(nullptr), first(&fst)
         {
             fst.appendToChain(this);
             fst.chainLen++;
